@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScholarForge AI - Production Academic Report Studio</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Mermaid.js for Architecture Diagrams & Flowcharts -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script>
+    mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+  </script>
+</head>
+<body class="p-3 md:p-8">
+
+  <!-- TOP PRODUCTION HEADER -->
+  <header class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 mb-8 pb-6 border-b border-white/10">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+        <i data-lucide="award" class="w-6 h-6 text-white"></i>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          ScholarForge AI <span class="badge-tag">Production v2.0</span>
+          <span id="autoSaveIndicator" class="text-[10px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auto-Saved
+          </span>
+        </h1>
+        <p class="text-xs text-slate-400">Autonomous University Report Maker • GitHub Analysis • UML & DFD Generator • Prompt Revisions • Word & PDF</p>
+      </div>
+    </div>
+
+    <!-- Header Actions & Controls -->
+    <div class="flex flex-wrap items-center gap-2.5">
+      <button onclick="openProjectsModal()" class="btn-secondary text-xs">
+        <i data-lucide="folder-clock" class="w-4 h-4 text-amber-400"></i>
+        <span>My Drafts (<span id="draftCountBadge">0</span>)</span>
+      </button>
+
+      <button onclick="openSettingsModal()" class="btn-secondary text-xs">
+        <i data-lucide="cpu" class="w-4 h-4 text-cyan-400"></i>
+        <span id="currentProviderLabel">AI: GEMINI (Free)</span>
+      </button>
+
+      <button onclick="toggleHelpModal()" class="btn-secondary text-xs">
+        <i data-lucide="help-circle" class="w-4 h-4 text-indigo-400"></i>
+        <span>Help & Guide</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="max-w-7xl mx-auto">
+
+    <!-- STEP PROGRESSION WIZARD -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+      <div id="stepTab1" onclick="switchStep(1)" class="wizard-step active">
+        <div class="step-num">1</div>
+        <div class="text-left">
+          <p class="text-xs font-semibold text-white">College & Info</p>
+          <p class="text-[10px] text-slate-400">Title, Team, Guide</p>
+        </div>
+      </div>
+
+      <div id="stepTab2" onclick="switchStep(2)" class="wizard-step">
+        <div class="step-num">2</div>
+        <div class="text-left">
+          <p class="text-xs font-semibold text-white">Code & Repo</p>
+          <p class="text-[10px] text-slate-400">GitHub & Tech Stack</p>
+        </div>
+      </div>
+
+      <div id="stepTab3" onclick="switchStep(3)" class="wizard-step">
+        <div class="step-num">3</div>
+        <div class="text-left">
+          <p class="text-xs font-semibold text-white">Report Format</p>
+          <p class="text-[10px] text-slate-400">VTU, AKTU, Custom .docx</p>
+        </div>
+      </div>
+
+      <div id="stepTab4" onclick="switchStep(4)" class="wizard-step">
+        <div class="step-num">4</div>
+        <div class="text-left">
+          <p class="text-xs font-semibold text-white">Diagrams & Media</p>
+          <p class="text-[10px] text-slate-400">UML, DFD & Screenshots</p>
+        </div>
+      </div>
+
+      <div id="stepTab5" onclick="switchStep(5)" class="wizard-step">
+        <div class="step-num">5</div>
+        <div class="text-left">
+          <p class="text-xs font-semibold text-white">Report Studio</p>
+          <p class="text-[10px] text-slate-400">Prompt Edits & Export</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- STEP 1: COLLEGE & PROJECT METADATA -->
+    <!-- ============================================== -->
+    <section id="stepSection1" class="step-content glass-panel p-6 md:p-8">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="graduation-cap" class="w-5 h-5 text-indigo-400"></i>
+            Step 1: Project Details & Academic Affiliation
+          </h2>
+          <p class="text-xs text-slate-400">Information for Title Page, Certificate of Authenticity, Declaration, and Acknowledgement.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Project Title *</label>
+          <input type="text" id="metaTitle" class="glass-input" placeholder="e.g. AI-Powered Medical Diagnosis System using Deep Learning" value="AI-Powered Disease Prediction System" onchange="triggerAutoSave()">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Project Domain / Subtitle</label>
+          <input type="text" id="metaDomain" class="glass-input" placeholder="e.g. Artificial Intelligence & Cloud Computing" value="Machine Learning & Cloud Computing" onchange="triggerAutoSave()">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Degree / Program *</label>
+          <input type="text" id="metaDegree" class="glass-input" placeholder="e.g. Bachelor of Technology in Computer Science & Engineering" value="Bachelor of Technology in Computer Science & Engineering" onchange="triggerAutoSave()">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Department Name *</label>
+          <input type="text" id="metaDepartment" class="glass-input" placeholder="e.g. Department of Computer Science & Engineering" value="Department of Computer Science & Engineering" onchange="triggerAutoSave()">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">College / Institute Name *</label>
+          <input type="text" id="metaCollege" class="glass-input" placeholder="e.g. Institute of Technology & Science" value="Institute of Technology & Science" onchange="triggerAutoSave()">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Affiliated University</label>
+          <input type="text" id="metaUniversity" class="glass-input" placeholder="e.g. State Technological University" value="State Technological University" onchange="triggerAutoSave()">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Project Guide Name & Designation *</label>
+          <input type="text" id="metaGuide" class="glass-input" placeholder="e.g. Dr. Amit K. Sharma, Associate Professor" value="Dr. Amit K. Sharma, Associate Professor" onchange="triggerAutoSave()">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Head of Department (HOD) Name</label>
+          <input type="text" id="metaHOD" class="glass-input" placeholder="e.g. Dr. R. V. Patel" value="Dr. R. V. Patel" onchange="triggerAutoSave()">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Academic Year</label>
+          <input type="text" id="metaYear" class="glass-input" placeholder="e.g. 2024 - 2026" value="2024 - 2026" onchange="triggerAutoSave()">
+        </div>
+      </div>
+
+      <!-- STUDENT CANDIDATES ROSTER -->
+      <div class="mt-6 pt-6 border-t border-white/10">
+        <div class="flex items-center justify-between mb-4">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            Student Candidates (Team Members)
+          </label>
+          <button type="button" onclick="addStudentRow()" class="btn-outline-glow text-xs py-1 px-3">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Add Student
+          </button>
+        </div>
+
+        <div id="studentsContainer" class="space-y-3">
+          <div class="student-row flex flex-col sm:flex-row gap-3 items-center">
+            <input type="text" class="glass-input student-name" placeholder="Student Name (e.g. Aarav Sharma)" value="Aarav Sharma" onchange="triggerAutoSave()">
+            <input type="text" class="glass-input student-roll" placeholder="University Roll No / USN (e.g. 21BCSE042)" value="21BCSE042" onchange="triggerAutoSave()">
+            <button type="button" onclick="removeStudentRow(this)" class="btn-secondary text-red-400 p-2 hover:bg-red-500/20">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-8">
+        <button onclick="switchStep(2)" class="btn-primary">
+          Next: Code & Repository <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ============================================== -->
+    <!-- STEP 2: CODE & REPOSITORY SOURCE -->
+    <!-- ============================================== -->
+    <section id="stepSection2" class="step-content glass-panel p-6 md:p-8 hidden">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="git-branch" class="w-5 h-5 text-cyan-400"></i>
+            Step 2: Source Code & Repository Analysis
+          </h2>
+          <p class="text-xs text-slate-400">Provide your GitHub URL or local code. Our engine parses the architecture, libraries, and functions.</p>
+        </div>
+      </div>
+
+      <!-- GitHub Option -->
+      <div class="mb-6 p-4 rounded-xl bg-slate-900/60 border border-white/10">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-2 flex items-center gap-1.5">
+          <i data-lucide="github" class="w-4 h-4"></i> GitHub Repository URL (Recommended)
+        </label>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="url" id="githubUrl" class="glass-input flex-1" placeholder="https://github.com/username/project-repo" value="https://github.com/openai/openai-python">
+          <button type="button" onclick="analyzeGithubRepo()" id="btnAnalyze" class="btn-primary whitespace-nowrap">
+            <i data-lucide="zap" class="w-4 h-4"></i> Auto-Analyze Repo
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-2">Automatically scans repository README, file architecture, dependency files, and core functions.</p>
+      </div>
+
+      <!-- Detected Tech Stack Display -->
+      <div id="techStackCard" class="mb-6 p-4 rounded-xl bg-slate-900/60 border border-white/10">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-semibold uppercase tracking-wider text-indigo-300">Detected Technologies & Libraries</label>
+          <span class="text-[10px] text-slate-400">Click x to remove or add your own</span>
+        </div>
+        <div id="techBadgesContainer" class="flex flex-wrap gap-2 mb-3">
+          <span class="badge-tag">Python</span>
+          <span class="badge-tag">FastAPI</span>
+          <span class="badge-tag">Machine Learning</span>
+          <span class="badge-tag">React</span>
+          <span class="badge-tag">PostgreSQL</span>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" id="newTechInput" class="glass-input text-xs py-1" placeholder="Add custom tech (e.g. PyTorch, Docker, OpenCV)">
+          <button type="button" onclick="addCustomTech()" class="btn-secondary text-xs py-1 px-3">Add</button>
+        </div>
+      </div>
+
+      <!-- Alternative: Local Directory or Paste Code -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+            Local Folder Path (Optional)
+          </label>
+          <input type="text" id="localPath" class="glass-input text-xs" placeholder="C:\Users\OMEN\MyPythonProject">
+          <button type="button" onclick="analyzeLocalPath()" class="btn-secondary text-xs mt-2 py-1 px-3">
+            <i data-lucide="folder-search" class="w-3.5 h-3.5"></i> Scan Local Path
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+            Paste Code Snippet or Key Algorithm (Optional)
+          </label>
+          <textarea id="pastedCode" rows="3" class="glass-input text-xs font-mono" placeholder="def process_pipeline(): ..."></textarea>
+        </div>
+      </div>
+
+      <!-- File Structure Summary -->
+      <div id="repoSummaryBox" class="mb-6 p-4 rounded-xl bg-slate-900/40 border border-white/5 hidden">
+        <h4 class="text-xs font-semibold text-white mb-1 flex items-center gap-1.5">
+          <i data-lucide="file-code" class="w-3.5 h-3.5 text-emerald-400"></i> Repository Telemetry
+        </h4>
+        <pre id="repoSummaryText" class="text-[11px] text-slate-300 font-mono max-h-32 overflow-y-auto whitespace-pre-wrap"></pre>
+      </div>
+
+      <div class="flex justify-between mt-8">
+        <button onclick="switchStep(1)" class="btn-secondary">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
+        </button>
+        <button onclick="switchStep(3)" class="btn-primary">
+          Next: Format & University Guidelines <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ============================================== -->
+    <!-- STEP 3: UNIVERSITY FORMAT & CUSTOM TEMPLATES -->
+    <!-- ============================================== -->
+    <section id="stepSection3" class="step-content glass-panel p-6 md:p-8 hidden">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="book-open" class="w-5 h-5 text-purple-400"></i>
+            Step 3: Select Format or Upload Custom College .docx Template
+          </h2>
+          <p class="text-xs text-slate-400">Choose a university preset, paste guidelines, OR upload your college's official Word template!</p>
+        </div>
+      </div>
+
+      <!-- SPECIAL: CUSTOM WORD TEMPLATE UPLOADER -->
+      <div class="mb-8 p-5 rounded-2xl bg-gradient-to-r from-purple-950/40 via-indigo-950/40 to-slate-900/60 border border-purple-500/40">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-sm font-bold text-purple-300 flex items-center gap-2">
+              <i data-lucide="file-up" class="w-4 h-4 text-purple-400"></i>
+              Upload Your College's Official Word (.docx) Template (Optional)
+            </h3>
+            <p class="text-xs text-slate-300 mt-1">
+              Agar aapke college ne koi specific sample report Word file di hai, to use yahan upload karein. Engine usi ke styles aur cover page me report inject karega!
+            </p>
+          </div>
+          <div>
+            <input type="file" id="customTemplateFileInput" accept=".docx" class="hidden" onchange="handleCustomTemplateUpload(event)">
+            <button type="button" onclick="document.getElementById('customTemplateFileInput').click()" class="btn-primary text-xs py-2 px-4 whitespace-nowrap">
+              <i data-lucide="upload" class="w-4 h-4"></i> Upload College .docx
+            </button>
+          </div>
+        </div>
+        <div id="uploadedTemplateStatus" class="mt-3 text-xs text-emerald-400 font-semibold hidden flex items-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span id="uploadedTemplateName"></span>
+        </div>
+      </div>
+
+      <!-- Format Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div onclick="selectFormatPreset('btech_standard')" id="card-btech_standard" class="format-card p-4 rounded-xl border border-indigo-500 bg-indigo-950/20 cursor-pointer hover:border-indigo-400 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-indigo-300">B.Tech Standard (8 Chapters)</span>
+            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">Recommended</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-3">Intro, Lit Survey, SRS, Architecture, Methodology, Results, Testing, Conclusion.</p>
+          <p class="text-[10px] text-slate-400">Accepted by 95% of engineering colleges.</p>
+        </div>
+
+        <div onclick="selectFormatPreset('vtu')" id="card-vtu" class="format-card p-4 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-indigo-400 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-white">VTU Format (Belagavi)</span>
+            <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">Karnataka</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-3">Strict VTU 8th Sem guidelines with 1.5" Left binding margin.</p>
+          <p class="text-[10px] text-slate-400">Societal impact & black/white-box test cases.</p>
+        </div>
+
+        <div onclick="selectFormatPreset('aktu')" id="card-aktu" class="format-card p-4 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-indigo-400 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-white">AKTU Format (Lucknow)</span>
+            <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">UP / NCR</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-3">Dr. A.P.J. Abdul Kalam Technical University final year project structure.</p>
+          <p class="text-[10px] text-slate-400">Mathematical modeling & feasibility study.</p>
+        </div>
+
+        <div onclick="selectFormatPreset('mca_bca')" id="card-mca_bca" class="format-card p-4 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-indigo-400 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-white">BCA / MCA / B.Sc CS</span>
+            <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">Software Dev</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-3">Emphasizes Data Flow Diagrams (Level 0, 1, 2) & Database Schema tables.</p>
+          <p class="text-[10px] text-slate-400">Application forms & security validation.</p>
+        </div>
+
+        <div onclick="selectFormatPreset('ieee_condensed')" id="card-ieee_condensed" class="format-card p-4 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-indigo-400 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-white">IEEE Mini-Project (5 Chapters)</span>
+            <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">Compact</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-3">Concise 5-chapter format for mini-projects, capstones, and seminars.</p>
+          <p class="text-[10px] text-slate-400">Publication-focused structure.</p>
+        </div>
+
+        <div onclick="selectFormatPreset('custom')" id="card-custom" class="format-card p-4 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-indigo-400 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-white">Custom College Guidelines</span>
+            <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full">Any Syllabus</span>
+          </div>
+          <p class="text-xs text-slate-300 mb-3">Paste your specific university syllabus or chapter index list below.</p>
+          <p class="text-[10px] text-slate-400">100% custom chapter decomposition.</p>
+        </div>
+      </div>
+
+      <!-- Custom Guidelines Input -->
+      <div id="customGuidelinesBox" class="mb-6 p-4 rounded-xl bg-slate-900/60 border border-white/10">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+          Custom Formatting Guidelines / Syllabus Prompt
+        </label>
+        <textarea id="customFormatText" rows="4" class="glass-input text-xs" placeholder="Paste your college's chapter index or specific rules (e.g. 'Must have 6 chapters: Intro, Literature Survey, System Design, Implementation, Results, Conclusion')"></textarea>
+      </div>
+
+      <div class="flex justify-between mt-8">
+        <button onclick="switchStep(2)" class="btn-secondary">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
+        </button>
+        <button onclick="switchStep(4)" class="btn-primary">
+          Next: Diagrams & Screenshots <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ============================================== -->
+    <!-- STEP 4: DIAGRAMS & SCREENSHOTS -->
+    <!-- ============================================== -->
+    <section id="stepSection4" class="step-content glass-panel p-6 md:p-8 hidden">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="network" class="w-5 h-5 text-emerald-400"></i>
+            Step 4: Auto-Generated Diagrams & Project Screenshots
+          </h2>
+          <p class="text-xs text-slate-400">Review auto-generated Architecture, DFD, and Sequence diagrams, and upload working UI screenshots.</p>
+        </div>
+      </div>
+
+      <!-- AUTO-GENERATED DIAGRAMS SECTION -->
+      <div class="mb-8 p-5 rounded-2xl bg-slate-900/70 border border-white/10">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-cyan-400 flex items-center gap-2">
+              <i data-lucide="workflow" class="w-4 h-4"></i> Auto-Generated System Diagrams (Mermaid.js)
+            </h3>
+            <p class="text-xs text-slate-300">Generated automatically from your repository tech stack and architecture.</p>
+          </div>
+          <button type="button" onclick="loadProjectDiagrams()" id="btnGenDiagrams" class="btn-outline-glow text-xs py-1.5 px-3">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Regenerate Diagrams
+          </button>
+        </div>
+
+        <!-- Diagram Tabs -->
+        <div class="flex border-b border-white/10 mb-4 gap-2 overflow-x-auto text-xs pb-1">
+          <button onclick="switchDiagramTab('architecture')" id="dtab-architecture" class="py-1 px-3 rounded-lg bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">System Architecture</button>
+          <button onclick="switchDiagramTab('dfd')" id="dtab-dfd" class="py-1 px-3 rounded-lg hover:bg-white/10 text-slate-400">DFD Level 1</button>
+          <button onclick="switchDiagramTab('sequence')" id="dtab-sequence" class="py-1 px-3 rounded-lg hover:bg-white/10 text-slate-400">Sequence Diagram</button>
+          <button onclick="switchDiagramTab('erd')" id="dtab-erd" class="py-1 px-3 rounded-lg hover:bg-white/10 text-slate-400">Database ERD</button>
+          <button onclick="switchDiagramTab('flowchart')" id="dtab-flowchart" class="py-1 px-3 rounded-lg hover:bg-white/10 text-slate-400">Process Flowchart</button>
+        </div>
+
+        <!-- Diagram Canvas View -->
+        <div id="mermaidRenderContainer" class="p-4 bg-slate-950/80 rounded-xl border border-white/10 min-h-[220px] flex items-center justify-center overflow-x-auto">
+          <p class="text-xs text-slate-500 italic">Click 'Regenerate Diagrams' or continue to auto-compile.</p>
+        </div>
+      </div>
+
+      <!-- SCREENSHOTS UPLOADER -->
+      <div class="mb-4">
+        <h3 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+          <i data-lucide="image" class="w-4 h-4 text-emerald-400"></i> Project Screenshots & Working UI Pictures
+        </h3>
+        <p class="text-xs text-slate-400 mb-3">Upload your UI dashboards, terminal output, or graphs. Embedded into Chapter 6 with academic captions.</p>
+      </div>
+
+      <div id="dropZone" class="mb-6 p-8 border-2 border-dashed border-indigo-500/40 rounded-2xl bg-indigo-950/10 hover:bg-indigo-950/20 text-center cursor-pointer transition-all" onclick="document.getElementById('screenshotFileInput').click()">
+        <input type="file" id="screenshotFileInput" multiple accept="image/*" class="hidden" onchange="handleScreenshotUpload(event)">
+        <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+          <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+        </div>
+        <h3 class="text-sm font-semibold text-white mb-1">Click to Upload or Drag & Drop Project Screenshots</h3>
+        <p class="text-xs text-slate-400">PNG, JPG, JPEG, WEBP (Multiple images allowed)</p>
+      </div>
+
+      <div id="screenshotsListContainer" class="space-y-3 mb-6"></div>
+
+      <div class="flex justify-between mt-8">
+        <button onclick="switchStep(3)" class="btn-secondary">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
+        </button>
+        <button onclick="startReportGeneration()" id="btnGenerateReport" class="btn-primary text-base py-3 px-6 shadow-xl shadow-indigo-500/40">
+          <i data-lucide="sparkles" class="w-5 h-5 text-amber-300"></i> Generate Production Academic Report
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ============================================== -->
+    <!-- STEP 5: LIVE REPORT STUDIO & PROMPT REVISION -->
+    <!-- ============================================== -->
+    <section id="stepSection5" class="step-content glass-panel p-4 md:p-8 hidden">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/10">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="file-check-2" class="w-5 h-5 text-emerald-400"></i>
+            Step 5: Academic Report Studio & Live Prompt Editor
+          </h2>
+          <p class="text-xs text-slate-400">Review your generated report, edit sections, or use AI prompts to change anything!</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          <button onclick="downloadReportDocx()" id="btnDownloadDocx" class="btn-primary w-full sm:w-auto">
+            <i data-lucide="download" class="w-4 h-4"></i> Download University .docx
+          </button>
+          <button onclick="window.print()" class="btn-secondary">
+            <i data-lucide="printer" class="w-4 h-4"></i> Print to PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Revision Alert Notice -->
+      <div id="revisionNoticeBox" class="mb-6 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs hidden flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span id="revisionNoticeText">Report updated successfully.</span>
+      </div>
+
+      <!-- Studio Layout: Sidebar + Document Paper View -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Left: Chapter Table of Contents Navigator -->
+        <div class="lg:col-span-1 p-4 rounded-xl bg-slate-900/70 border border-white/10 h-fit sticky top-6">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-1.5">
+            <i data-lucide="list" class="w-4 h-4 text-indigo-400"></i> Report Navigation
+          </h3>
+          <nav id="tocNav" class="space-y-1 text-xs"></nav>
+        </div>
+
+        <!-- Center: Paper Document Preview -->
+        <div class="lg:col-span-3">
+          <div id="documentPaper" class="academic-preview-paper text-slate-900 rounded-xl overflow-hidden p-6 md:p-12">
+            <p class="text-center text-slate-500 py-12">Generating report content...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROMPT REVISION ENGINE -->
+      <div class="prompt-bar-container mt-8">
+        <div class="prompt-bar">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="wand-2" class="w-4 h-4 text-purple-400"></i>
+              AI Prompt Revision (Bhai koi change chahiye to prompt likho):
+            </span>
+            <span class="text-[10px] text-slate-400">Hinglish / English supported</span>
+          </div>
+
+          <!-- Quick Suggestion Chips -->
+          <div class="flex flex-wrap gap-1.5 mb-3">
+            <button type="button" onclick="setPromptSuggestion('Abstract ko 150 words me concise aur technical karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
+              Shorten Abstract
+            </button>
+            <button type="button" onclick="setPromptSuggestion('Chapter 4 me deep learning CNN model ki mathematical loss equations add karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
+              Add Math & CNN Equations
+            </button>
+            <button type="button" onclick="setPromptSuggestion('Testing chapter me 5 more test cases add karo table me')" class="badge-tag hover:border-indigo-400 cursor-pointer">
+              Add More Test Cases
+            </button>
+            <button type="button" onclick="setPromptSuggestion('Literature survey me 4 IEEE 2024 papers aur comparative table include karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
+              Add IEEE 2024 Papers
+            </button>
+            <button type="button" onclick="setPromptSuggestion('Tone ko aur formal aur academic English me rewrite karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
+              Humanized Academic Tone
+            </button>
+          </div>
+
+          <!-- Input Field & Submit -->
+          <div class="flex gap-2">
+            <input type="text" id="userRevisionPrompt" class="glass-input text-xs" placeholder="e.g. 'Chapter 3 me GPU hardware requirements add karo' ya 'Roll number 21BCSE099 kar do'">
+            <button type="button" onclick="submitPromptRevision()" id="btnRevise" class="btn-primary text-xs py-2 px-4 whitespace-nowrap">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i> Revise via Prompt
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ============================================== -->
+  <!-- MODAL: SAVED PROJECTS & DRAFTS (SQLite) -->
+  <!-- ============================================== -->
+  <div id="projectsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-panel max-w-xl w-full p-6 border border-white/20 max-h-[80vh] flex flex-col">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="folder-clock" class="w-5 h-5 text-amber-400"></i> My Saved Projects & Drafts
+        </h3>
+        <button onclick="closeProjectsModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="projectsListContainer" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+        <p class="text-center text-slate-400 py-6">Loading drafts...</p>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+        <button type="button" onclick="createNewProjectDraft()" class="btn-outline-glow text-xs py-1.5 px-3">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Start New Project
+        </button>
+        <button type="button" onclick="closeProjectsModal()" class="btn-secondary text-xs">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- MODAL: SETTINGS & API KEY CONFIGURATION -->
+  <!-- ============================================== -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-panel max-w-md w-full p-6 border border-white/20">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="cpu" class="w-5 h-5 text-cyan-400"></i> AI Provider & API Keys
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 mb-4">
+        Ye tool bina kisi API key ke bhi <strong>100% Offline Heuristic Mode</strong> me authentic academic prose banata hai. Free Google Gemini ya Groq key daal kar aur deep research kar sakte hain!
+      </p>
+
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Select AI Engine</label>
+          <select id="modalProviderSelect" class="glass-input text-xs" onchange="handleProviderChange()">
+            <option value="gemini">Google Gemini (Recommended - Free Tier Available)</option>
+            <option value="groq">Groq Cloud (Ultra Fast Llama 3.3 - Free Tier)</option>
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="ollama">Ollama (Local Offline AI - localhost:11434)</option>
+            <option value="offline">Offline Academic Generator (No Key Needed)</option>
+          </select>
+        </div>
+
+        <div id="apiKeyGroup">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">API Key</label>
+          <input type="password" id="modalApiKey" class="glass-input text-xs" placeholder="Enter your API key">
+          <p class="text-[10px] text-slate-400 mt-1">Get free key from <a href="https://aistudio.google.com" target="_blank" class="text-cyan-400 underline">Google AI Studio</a> or <a href="https://console.groq.com" target="_blank" class="text-cyan-400 underline">Groq Console</a>.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Model Name (Optional)</label>
+          <input type="text" id="modalModelName" class="glass-input text-xs" placeholder="e.g. gemini-1.5-flash or llama-3.3-70b-versatile">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="testApiKey()" id="btnTestKey" class="btn-secondary text-xs">
+          Test Connection
+        </button>
+        <button type="button" onclick="saveSettings()" class="btn-primary text-xs">
+          Save Settings
+        </button>
+      </div>
+      <p id="keyTestResult" class="text-xs mt-3 text-center hidden"></p>
+    </div>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- MODAL: QUICK GUIDE & HINDI HELP -->
+  <!-- ============================================== -->
+  <div id="helpModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-panel max-w-lg w-full p-6 border border-white/20 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="book-marked" class="w-5 h-5 text-amber-400"></i> Quick Guide (Kaise Use Karein)
+        </h3>
+        <button onclick="toggleHelpModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
+        <div class="p-3 rounded-lg bg-indigo-950/40 border border-indigo-500/20">
+          <h4 class="font-bold text-indigo-300 mb-1">1. College & Project Details</h4>
+          <p>Project Title, College Name, Department, Guide Name aur sabhi team members ke Roll No / USN daalein.</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-cyan-950/40 border border-cyan-500/20">
+          <h4 class="font-bold text-cyan-300 mb-1">2. Code & GitHub Repository</h4>
+          <p>Apna GitHub URL daal kar "Auto-Analyze Repo" par click karein. Ye automatically README, main code aur technologies ko scan kar lega.</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-purple-950/40 border border-purple-500/20">
+          <h4 class="font-bold text-purple-300 mb-1">3. University Format ya Custom .docx Template</h4>
+          <p>College format chunein ya agar college ne apna Word sample format diya hai to direct upload karein.</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/20">
+          <h4 class="font-bold text-emerald-300 mb-1">4. Screenshots & Diagrams</h4>
+          <p>Mermaid architecture diagrams auto-generate hote hain, aur screenshots proper captions ke sath lagte hain.</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-amber-950/40 border border-amber-500/20">
+          <h4 class="font-bold text-amber-300 mb-1">5. Prompt Se Changes (Prompt Revision)</h4>
+          <p>Report banne ke baad niche AI Prompt bar me kuch bhi likhein — jaise <em>"Chapter 4 me CNN equations add karo"</em> ya <em>"Roll number change karo"</em> — AI turant update karega!</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-800 border border-white/10">
+          <h4 class="font-bold text-white mb-1">6. Download Final .docx & PDF</h4>
+          <p>"Download University .docx" par click karke college-compliant Word document save karein ya direct print karein.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button onclick="toggleHelpModal()" class="btn-primary text-xs">Samajh Gaya (Close)</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
