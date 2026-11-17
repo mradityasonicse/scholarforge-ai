@@ -84,7 +84,7 @@ class Subsection(BaseModel):
     content: str
     code_snippet: Optional[str] = None
     code_language: Optional[str] = None
-    table_data: Optional[Dict[str, Any]] = None  # {"headers": [...], "rows": [[...]]}
+    table_data: Optional[Any] = None  # {"headers": [...], "rows": [[...]]} or List[List[str]]
     figures: List[str] = []  # Image filenames or IDs
 
 

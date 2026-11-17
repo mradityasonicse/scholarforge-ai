@@ -666,7 +666,7 @@ function renderDocumentPaper(report) {
   let html = `
     <!-- COVER PAGE -->
     <div id="sectionCover" class="text-center py-10 border-b-2 border-slate-200 mb-12">
-      <h1 class="text-3xl font-bold uppercase tracking-wider text-slate-900 mb-4">${meta.title}</h1>
+      <h1 id="paperTitle" class="text-3xl font-bold uppercase tracking-wider text-slate-900 mb-4 focus:outline-none focus:ring-2 focus:ring-amber-400 p-1 rounded">${meta.title}</h1>
       <p class="text-sm font-bold tracking-widest text-slate-700 uppercase mb-2">A PROJECT REPORT</p>
       <p class="text-xs italic text-slate-600 mb-2">Submitted in partial fulfillment of the requirements for the award of the degree of</p>
       <p class="text-base font-bold text-slate-900 uppercase mb-8">${meta.degree}</p>
@@ -695,9 +695,9 @@ function renderDocumentPaper(report) {
       </div>
 
       <div class="mt-8 pt-4 border-t border-slate-200">
-        <p class="text-sm font-bold uppercase text-slate-900">${meta.department}</p>
-        <p class="text-sm font-bold uppercase text-slate-900">${meta.college_name}</p>
-        <p class="text-xs italic text-slate-600 mb-1">(Affiliated to ${meta.university_name})</p>
+        <p id="paperDept" class="text-sm font-bold uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 p-0.5 rounded">${meta.department}</p>
+        <p id="paperCollege" class="text-sm font-bold uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 p-0.5 rounded">${meta.college_name}</p>
+        <p class="text-xs italic text-slate-600 mb-1">(Affiliated to ${meta.university_name || 'State Technological University'})</p>
         <p class="text-xs font-bold text-slate-700">Academic Year: ${meta.academic_year}</p>
       </div>
     </div>
@@ -730,7 +730,7 @@ function renderDocumentPaper(report) {
     <!-- ABSTRACT -->
     <div id="sectionAbstract" class="py-8 border-b border-slate-200 mb-10">
       <h2 class="text-xl font-bold uppercase text-center mb-6">ABSTRACT</h2>
-      <div class="text-justify text-sm leading-relaxed whitespace-pre-line mb-4">${report.abstract}</div>
+      <div id="paperAbstract" class="text-justify text-sm leading-relaxed whitespace-pre-line mb-4 focus:outline-none focus:ring-2 focus:ring-amber-400 p-2 rounded">${report.abstract}</div>
       <p class="text-xs font-bold mt-4">Keywords: <span class="italic font-normal">${report.keywords.join(', ')}</span></p>
     </div>
   `;
@@ -739,15 +739,15 @@ function renderDocumentPaper(report) {
   report.chapters.forEach(ch => {
     html += `
       <div id="ch_${ch.id}" class="py-8 border-b border-slate-200 mb-10">
-        <h2 class="text-xl font-bold uppercase text-slate-900 mb-4 pb-2 border-b-2 border-slate-800">${ch.title}</h2>
+        <h2 data-ch-title="${ch.id}" class="text-xl font-bold uppercase text-slate-900 mb-4 pb-2 border-b-2 border-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 p-1 rounded">${ch.title}</h2>
         ${ch.summary ? `<p class="text-sm italic text-slate-700 mb-6">${ch.summary}</p>` : ''}
     `;
 
-    ch.subsections.forEach(sub => {
+    ch.subsections.forEach((sub, subIdx) => {
       html += `
         <div class="mb-6">
           <h3 class="text-base font-bold text-slate-900 mb-2">${sub.heading}</h3>
-          <div class="text-sm text-justify leading-relaxed whitespace-pre-line mb-3">${sub.content}</div>
+          <div data-ch-sub-content="${ch.id}" data-sub-idx="${subIdx}" class="text-sm text-justify leading-relaxed whitespace-pre-line mb-3 focus:outline-none focus:ring-2 focus:ring-amber-400 p-2 rounded">${sub.content}</div>
       `;
 
       if (sub.code_snippet) {
@@ -801,6 +801,89 @@ function renderDocumentPaper(report) {
   `;
 
   paper.innerHTML = html;
+
+  // Re-apply direct edit mode if active
+  if (isDirectEditOn) {
+    paper.contentEditable = "true";
+  }
+}
+
+// Direct In-Place Edit Mode State
+let isDirectEditOn = false;
+
+function toggleDirectEditMode() {
+  isDirectEditOn = !isDirectEditOn;
+  const paper = document.getElementById("documentPaper");
+  const btn = document.getElementById("btnToggleEdit");
+  const label = document.getElementById("editModeLabel");
+
+  if (isDirectEditOn) {
+    paper.contentEditable = "true";
+    paper.classList.add("ring-4", "ring-amber-400/50");
+    btn.classList.add("border-amber-400", "text-amber-300");
+    label.textContent = "Direct Edit: ON";
+
+    const noticeBox = document.getElementById("revisionNoticeBox");
+    const noticeText = document.getElementById("revisionNoticeText");
+    noticeBox.classList.remove("hidden");
+    noticeText.textContent = "✏️ Direct Edit Mode is ON! Click and edit any title, abstract, or paragraph directly. All edits save to PDF & DOCX instantly!";
+  } else {
+    paper.contentEditable = "false";
+    paper.classList.remove("ring-4", "ring-amber-400/50");
+    btn.classList.remove("border-amber-400", "text-amber-300");
+    label.textContent = "Direct Edit: OFF";
+    syncDirectEditsToReport();
+
+    const noticeBox = document.getElementById("revisionNoticeBox");
+    const noticeText = document.getElementById("revisionNoticeText");
+    noticeBox.classList.remove("hidden");
+    noticeText.textContent = "✓ In-place edits saved to memory & database.";
+  }
+}
+
+function syncDirectEditsToReport() {
+  if (!appState.current_report) return;
+
+  const titleEl = document.getElementById("paperTitle");
+  if (titleEl && titleEl.innerText.trim()) {
+    appState.current_report.metadata.title = titleEl.innerText.trim();
+  }
+
+  const deptEl = document.getElementById("paperDept");
+  if (deptEl && deptEl.innerText.trim()) {
+    appState.current_report.metadata.department = deptEl.innerText.trim();
+  }
+
+  const collegeEl = document.getElementById("paperCollege");
+  if (collegeEl && collegeEl.innerText.trim()) {
+    appState.current_report.metadata.college_name = collegeEl.innerText.trim();
+  }
+
+  const absEl = document.getElementById("paperAbstract");
+  if (absEl && absEl.innerText.trim()) {
+    appState.current_report.abstract = absEl.innerText.trim();
+  }
+
+  // Chapter titles
+  document.querySelectorAll("[data-ch-title]").forEach(el => {
+    const chId = parseInt(el.getAttribute("data-ch-title"));
+    const ch = appState.current_report.chapters.find(c => c.id === chId);
+    if (ch && el.innerText.trim()) {
+      ch.title = el.innerText.trim();
+    }
+  });
+
+  // Subsection contents
+  document.querySelectorAll("[data-ch-sub-content]").forEach(el => {
+    const chId = parseInt(el.getAttribute("data-ch-sub-content"));
+    const subIdx = parseInt(el.getAttribute("data-sub-idx"));
+    const ch = appState.current_report.chapters.find(c => c.id === chId);
+    if (ch && ch.subsections && ch.subsections[subIdx] && el.innerText.trim()) {
+      ch.subsections[subIdx].content = el.innerText.trim();
+    }
+  });
+
+  triggerAutoSave();
 }
 
 // Prompt Revision Engine
@@ -820,6 +903,9 @@ async function submitPromptRevision() {
     alert("No report has been generated yet.");
     return;
   }
+
+  // Sync any on-screen edits before sending revision prompt
+  syncDirectEditsToReport();
 
   const btn = document.getElementById("btnRevise");
   const origHtml = btn.innerHTML;
@@ -848,7 +934,7 @@ async function submitPromptRevision() {
       const noticeBox = document.getElementById("revisionNoticeBox");
       const noticeText = document.getElementById("revisionNoticeText");
       noticeBox.classList.remove("hidden");
-      noticeText.textContent = data.revision_summary || "Report updated based on your prompt.";
+      noticeText.textContent = "✓ " + (data.revision_summary || "Report updated based on your prompt.");
 
       promptInput.value = "";
       triggerAutoSave();
@@ -865,12 +951,61 @@ async function submitPromptRevision() {
   }
 }
 
+// Download University PDF
+async function downloadReportPdf() {
+  if (!appState.current_report) {
+    alert("Please generate a report first.");
+    return;
+  }
+
+  syncDirectEditsToReport();
+
+  const btn = document.getElementById("btnDownloadPdf");
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Rendering University PDF...`;
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/download-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        report: appState.current_report
+      })
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeTitle = (appState.current_report.metadata.title || "Project_Report").replace(/[^a-zA-Z0-9_-]/g, "_");
+      a.download = `${safeTitle}_Report.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } else {
+      const err = await res.json();
+      alert("PDF generation error: " + (err.detail || "Failed to compile PDF document"));
+    }
+  } catch (err) {
+    alert("PDF download failed: " + err.message);
+  } finally {
+    btn.innerHTML = origHtml;
+    btn.disabled = false;
+    lucide.createIcons();
+  }
+}
+
 // Download .docx File (Supports Custom Template)
 async function downloadReportDocx() {
   if (!appState.current_report) {
     alert("Please generate a report first.");
     return;
   }
+
+  syncDirectEditsToReport();
 
   const btn = document.getElementById("btnDownloadDocx");
   const origHtml = btn.innerHTML;

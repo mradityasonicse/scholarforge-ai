@@ -22,6 +22,7 @@ from app.github_parser import fetch_github_repo_data, scan_local_directory
 from app.report_generator import generate_full_report, call_llm_api
 from app.prompt_reviser import revise_report_with_prompt
 from app.docx_builder import create_university_docx
+from app.pdf_builder import create_university_pdf
 from app.docx_template_engine import inject_into_custom_template
 from app.diagram_generator import generate_architecture_diagrams
 from app.database import (
@@ -292,6 +293,38 @@ async def download_docx_api(req: DownloadDocxRequest):
         )
     except Exception as e:
         print(f"Error creating DOCX: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DownloadPdfRequest(BaseModel):
+    report: ReportData
+
+
+@app.post("/api/download-pdf")
+async def download_pdf_api(req: DownloadPdfRequest):
+    """
+    Generates academic publication-grade .pdf file.
+    Standardized to 1.25" left binding gutter, Times New Roman, running headers, and page numbers.
+    """
+    try:
+        report = req.report
+        safe_title = "".join(c for c in report.metadata.title if c.isalnum() or c in (" ", "_", "-")).strip()
+        safe_title = safe_title[:40].replace(" ", "_") or "Project_Report"
+        filename = f"{safe_title}_Report.pdf"
+        output_path = os.path.join(UPLOAD_DIR, filename)
+
+        create_university_pdf(report, output_path)
+
+        if not os.path.exists(output_path):
+            raise HTTPException(status_code=500, detail="Failed to create PDF document.")
+
+        return FileResponse(
+            path=output_path,
+            filename=filename,
+            media_type="application/pdf"
+        )
+    except Exception as e:
+        print(f"Error creating PDF: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

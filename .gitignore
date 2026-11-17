@@ -5,9 +5,8 @@ __pycache__/
 .venv/
 venv/
 ENV/
-uploads/test_*
-uploads/sample_*
-uploads/custom_injected_*
+uploads/*
+!uploads/.gitkeep
 .DS_Store
 Thumbs.db
 

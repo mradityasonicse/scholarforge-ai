@@ -521,11 +521,25 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-          <button onclick="downloadReportDocx()" id="btnDownloadDocx" class="btn-primary w-full sm:w-auto">
-            <i data-lucide="download" class="w-4 h-4"></i> Download University .docx
+          <!-- DOWNLOAD UNIVERSITY PDF (PRIMARY) -->
+          <button onclick="downloadReportPdf()" id="btnDownloadPdf" class="btn-primary w-full sm:w-auto bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 shadow-xl shadow-emerald-500/30 text-white font-bold">
+            <i data-lucide="file-down" class="w-4 h-4"></i> Download University PDF
           </button>
-          <button onclick="window.print()" class="btn-secondary">
-            <i data-lucide="printer" class="w-4 h-4"></i> Print to PDF
+
+          <!-- DOWNLOAD UNIVERSITY DOCX -->
+          <button onclick="downloadReportDocx()" id="btnDownloadDocx" class="btn-secondary w-full sm:w-auto hover:border-blue-400">
+            <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i> Download .docx
+          </button>
+
+          <!-- DIRECT IN-PLACE EDIT MODE -->
+          <button onclick="toggleDirectEditMode()" id="btnToggleEdit" class="btn-secondary text-xs">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span id="editModeLabel">Direct Edit: OFF</span>
+          </button>
+
+          <!-- BROWSER PRINT FALLBACK -->
+          <button onclick="window.print()" class="btn-secondary text-xs" title="Browser Print to PDF">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
           </button>
         </div>
       </div>
@@ -567,20 +581,26 @@
 
           <!-- Quick Suggestion Chips -->
           <div class="flex flex-wrap gap-1.5 mb-3">
+            <button type="button" onclick="setPromptSuggestion('Title change karke \'AI Automated Fraud Detection System\' kar do')" class="badge-tag hover:border-emerald-400 cursor-pointer">
+              Change Title
+            </button>
+            <button type="button" onclick="setPromptSuggestion('Roll number 21BCSE099 kar do')" class="badge-tag hover:border-emerald-400 cursor-pointer">
+              Update Roll No.
+            </button>
             <button type="button" onclick="setPromptSuggestion('Abstract ko 150 words me concise aur technical karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
               Shorten Abstract
             </button>
             <button type="button" onclick="setPromptSuggestion('Chapter 4 me deep learning CNN model ki mathematical loss equations add karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
               Add Math & CNN Equations
             </button>
+            <button type="button" onclick="setPromptSuggestion('Chapter 5 me PyTorch neural training pipeline ka code snippet add karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
+              Add PyTorch Code Snippet
+            </button>
             <button type="button" onclick="setPromptSuggestion('Testing chapter me 5 more test cases add karo table me')" class="badge-tag hover:border-indigo-400 cursor-pointer">
-              Add More Test Cases
+              Add Test Cases
             </button>
             <button type="button" onclick="setPromptSuggestion('Literature survey me 4 IEEE 2024 papers aur comparative table include karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
               Add IEEE 2024 Papers
-            </button>
-            <button type="button" onclick="setPromptSuggestion('Tone ko aur formal aur academic English me rewrite karo')" class="badge-tag hover:border-indigo-400 cursor-pointer">
-              Humanized Academic Tone
             </button>
           </div>
 
