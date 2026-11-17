@@ -18,6 +18,7 @@ def call_llm_api(system_prompt: str, user_prompt: str, llm_config) -> Optional[s
     api_key = (llm_config.api_key or "").strip()
 
     if provider == "gemini":
+        api_key = api_key or os.environ.get("GEMINI_API_KEY", "").strip()
         if not api_key:
             return None
         model = llm_config.model_name or "gemini-1.5-flash"
@@ -51,6 +52,7 @@ def call_llm_api(system_prompt: str, user_prompt: str, llm_config) -> Optional[s
             print(f"Gemini Request failed: {e}")
 
     elif provider == "groq":
+        api_key = api_key or os.environ.get("GROQ_API_KEY", "").strip()
         if not api_key:
             return None
         model = llm_config.model_name or "llama-3.3-70b-versatile"
@@ -373,6 +375,10 @@ def generate_full_report(request: GenerateReportRequest) -> ReportData:
 
     provider = (request.llm_config.provider or "offline").lower()
     api_key = (request.llm_config.api_key or "").strip()
+    if provider == "gemini" and not api_key:
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    elif provider == "groq" and not api_key:
+        api_key = os.environ.get("GROQ_API_KEY", "").strip()
 
     if provider != "offline" and api_key:
         system_prompt = ACADEMIC_HUMANIZER_SYSTEM_PROMPT

@@ -42,9 +42,9 @@ let appState = {
   diagrams: {},
   activeDiagramTab: "architecture",
   llm_config: {
-    provider: "gemini",
+    provider: "offline",
     api_key: "",
-    model_name: "gemini-1.5-flash",
+    model_name: "",
     custom_prompt: ""
   },
   current_report: null
@@ -1080,15 +1080,31 @@ function handleProviderChange() {
   }
 }
 
+function switchToOfflineMode() {
+  document.getElementById("modalProviderSelect").value = "offline";
+  document.getElementById("modalApiKey").value = "";
+  document.getElementById("modalModelName").value = "";
+  handleProviderChange();
+  saveSettings();
+}
+
+function updateProviderLabel() {
+  const label = document.getElementById("currentProviderLabel");
+  if (!label) return;
+  if (appState.llm_config.provider === "offline" || !appState.llm_config.api_key) {
+    label.textContent = "AI: 100% Free Mode";
+  } else {
+    label.textContent = `AI: ${appState.llm_config.provider.toUpperCase()} (Connected)`;
+  }
+}
+
 function saveSettings() {
   appState.llm_config.provider = document.getElementById("modalProviderSelect").value;
   appState.llm_config.api_key = document.getElementById("modalApiKey").value.trim();
   appState.llm_config.model_name = document.getElementById("modalModelName").value.trim();
 
   localStorage.setItem("scholarforge_llm_config", JSON.stringify(appState.llm_config));
-
-  const label = document.getElementById("currentProviderLabel");
-  label.textContent = `AI: ${appState.llm_config.provider.toUpperCase()}`;
+  updateProviderLabel();
   closeSettingsModal();
 }
 
@@ -1097,10 +1113,9 @@ function loadSavedSettings() {
   if (saved) {
     try {
       appState.llm_config = JSON.parse(saved);
-      const label = document.getElementById("currentProviderLabel");
-      if (label) label.textContent = `AI: ${appState.llm_config.provider.toUpperCase()}`;
     } catch (e) {}
   }
+  updateProviderLabel();
 }
 
 async function testApiKey() {

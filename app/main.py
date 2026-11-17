@@ -346,10 +346,16 @@ async def test_api_key(req: TestKeyRequest):
     """
     Validates API key connectivity with LLM provider.
     """
+    if req.provider.lower() == "offline":
+        return {
+            "valid": True,
+            "message": "Offline Academic Synthesizer is active! 100% free with no API key required."
+        }
+
     llm_conf = LLMConfig(provider=req.provider, api_key=req.api_key, model_name=req.model_name)
     sys_p = "Respond with JSON only: {\"status\": \"ok\"}"
     usr_p = "Ping test"
     res = call_llm_api(sys_p, usr_p, llm_conf)
     if res and "status" in res:
         return {"valid": True, "message": f"Successfully connected to {req.provider.title()} API!"}
-    return {"valid": False, "message": f"Connection to {req.provider.title()} failed. Please check the key."}
+    return {"valid": False, "message": f"Connection to {req.provider.title()} failed. Check your key or use Offline Mode."}
