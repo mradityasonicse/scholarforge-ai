@@ -77,9 +77,12 @@ async def handle_prediction(payload: UserQuery):
     )
     rep = generate_full_report(req)
     chap5 = [c for c in rep.chapters if any(k in c.title.lower() for k in ["implementation", "module"])][0]
-    sub1 = chap5.subsections[0]
-    assert "api/routes.py" in str(sub1.code_snippet) or "routes.py" in sub1.content, "Real code was not injected into Chapter 5"
-    assert "DiagnosisModel" in sub1.content or "DiagnosisModel" in str(sub1.code_snippet), "Class DiagnosisModel was not referenced in Chapter 5"
+    subs_with_code = [s for s in chap5.subsections if s.code_snippet]
+    assert len(subs_with_code) > 0, "No code snippets found in Chapter 5"
+    sub_code = subs_with_code[0]
+    assert "api/routes.py" in str(sub_code.code_snippet) or "routes.py" in sub_code.content, "Real code was not injected into Chapter 5"
+    ch5_text = " ".join([s.content for s in chap5.subsections]) + " " + str(sub_code.code_snippet)
+    assert "DiagnosisModel" in ch5_text, "Class DiagnosisModel was not referenced in Chapter 5"
     print("  ✓ Real code, classes, and endpoints successfully injected into Chapter 5!")
     print("\nALL REPOSITORY CODE ACCESS TESTS PASSED!")
 

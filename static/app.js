@@ -33,6 +33,7 @@ let appState = {
   },
   format_config: {
     preset: "btech_standard",
+    academic_depth: "comprehensive",
     custom_guidelines: "",
     font_family: "Times New Roman",
     line_spacing: 1.5
@@ -436,6 +437,23 @@ function selectFormatPreset(presetKey) {
   const customBox = document.getElementById("customGuidelinesBox");
   if (presetKey === "custom") {
     customBox.classList.remove("hidden");
+  }
+  triggerAutoSave();
+}
+
+// Academic Depth Selection
+function selectAcademicDepth(depthKey) {
+  appState.format_config.academic_depth = depthKey;
+
+  document.querySelectorAll(".depth-card").forEach(c => {
+    c.classList.remove("border-cyan-500", "bg-cyan-950/20");
+    c.classList.add("border-white/10", "bg-slate-900/40");
+  });
+
+  const selected = document.getElementById(`depth-${depthKey}`);
+  if (selected) {
+    selected.classList.remove("border-white/10", "bg-slate-900/40");
+    selected.classList.add("border-cyan-500", "bg-cyan-950/20");
   }
   triggerAutoSave();
 }
@@ -1132,6 +1150,15 @@ async function loadProjectDraft(projectId) {
         appState.code_source = data.code_source;
         renderTechBadges();
         renderRepoCodeExplorer();
+      }
+      if (data.format_config) {
+        appState.format_config = data.format_config;
+        if (data.format_config.preset) {
+          selectFormatPreset(data.format_config.preset);
+        }
+        if (data.format_config.academic_depth) {
+          selectAcademicDepth(data.format_config.academic_depth);
+        }
       }
       if (data.screenshots) {
         appState.screenshots = data.screenshots;

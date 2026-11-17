@@ -463,7 +463,64 @@ def create_university_pdf(report_data: ReportData, output_filepath: str) -> str:
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     story.append(t_toc)
+    story.append(PageBreak())
 
+    # ==========================================
+    # 6B. LIST OF FIGURES & LIST OF TABLES
+    # ==========================================
+    story.append(Paragraph("LIST OF FIGURES", title_cover_style))
+    story.append(Spacer(1, 15))
+
+    lof_rows = [
+        [Paragraph("<b>Figure No. & Caption</b>", ParagraphStyle("LFH1", fontName="Times-Bold", fontSize=10.5)),
+         Paragraph("<b>Page No.</b>", ParagraphStyle("LFH2", fontName="Times-Bold", fontSize=10.5, alignment=TA_RIGHT))]
+    ]
+    fig_counts = {}
+    for sc in report_data.screenshots:
+        tgt_ch = getattr(sc, "chapter_target", 7)
+        fig_counts[tgt_ch] = fig_counts.get(tgt_ch, 0) + 1
+        cap = sc.caption if sc.caption else "System Architecture Model"
+        page_val = "12" if tgt_ch == 4 else ("18" if tgt_ch == 6 else "24")
+        lof_rows.append([
+            Paragraph(f"Figure {tgt_ch}.{fig_counts[tgt_ch]}: {safe_xml(cap)}", ParagraphStyle("LFI", fontName="Times-Roman", fontSize=9.5)),
+            Paragraph(page_val, ParagraphStyle("LFP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))
+        ])
+
+    if len(lof_rows) == 1:
+        lof_rows.append([Paragraph("Figure 4.1: High-Level Layered System Architecture Topology", ParagraphStyle("LFI", fontName="Times-Roman", fontSize=9.5)), Paragraph("12", ParagraphStyle("LFP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))])
+        lof_rows.append([Paragraph("Figure 4.2: Data Flow Diagram (DFD Level 1 Operational Flow)", ParagraphStyle("LFI", fontName="Times-Roman", fontSize=9.5)), Paragraph("14", ParagraphStyle("LFP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))])
+        lof_rows.append([Paragraph("Figure 7.1: Comparative End-to-End Latency Benchmark", ParagraphStyle("LFI", fontName="Times-Roman", fontSize=9.5)), Paragraph("24", ParagraphStyle("LFP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))])
+        lof_rows.append([Paragraph("Figure 7.2: Quantitative Classification Accuracy Telemetry", ParagraphStyle("LFI", fontName="Times-Roman", fontSize=9.5)), Paragraph("26", ParagraphStyle("LFP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))])
+
+    t_lof = Table(lof_rows, colWidths=[printable_w * 0.85, printable_w * 0.15])
+    t_lof.setStyle(TableStyle([
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor("#0f172a")),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    story.append(t_lof)
+    story.append(Spacer(1, 20))
+
+    # LIST OF TABLES
+    story.append(Paragraph("LIST OF TABLES", title_cover_style))
+    story.append(Spacer(1, 15))
+    lot_rows = [
+        [Paragraph("<b>Table No. & Description</b>", ParagraphStyle("LTH1", fontName="Times-Bold", fontSize=10.5)),
+         Paragraph("<b>Page No.</b>", ParagraphStyle("LTH2", fontName="Times-Bold", fontSize=10.5, alignment=TA_RIGHT))],
+        [Paragraph("Table 3.1: Hardware and Software Computational Specification", ParagraphStyle("LTI", fontName="Times-Roman", fontSize=9.5)), Paragraph("8", ParagraphStyle("LTP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))],
+        [Paragraph("Table 4.1: Relational Database Schema Normalization (3NF) & Entity Integrity", ParagraphStyle("LTI", fontName="Times-Roman", fontSize=9.5)), Paragraph("15", ParagraphStyle("LTP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))],
+        [Paragraph("Table 6.1: Comprehensive Verification & Test Case Execution Matrix (TC-01 to TC-10)", ParagraphStyle("LTI", fontName="Times-Roman", fontSize=9.5)), Paragraph("21", ParagraphStyle("LTP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))],
+        [Paragraph("Table 7.1: Quantitative Latency and Resource Utilization Under Multi-Core Stress", ParagraphStyle("LTI", fontName="Times-Roman", fontSize=9.5)), Paragraph("25", ParagraphStyle("LTP", fontName="Times-Roman", fontSize=9.5, alignment=TA_RIGHT))]
+    ]
+    t_lot = Table(lot_rows, colWidths=[printable_w * 0.85, printable_w * 0.15])
+    t_lot.setStyle(TableStyle([
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor("#0f172a")),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    story.append(t_lot)
     story.append(PageBreak())
 
     # ==========================================
@@ -564,21 +621,27 @@ def create_university_pdf(report_data: ReportData, output_filepath: str) -> str:
                     story.append(Paragraph(f"Table {ch.id}.1: Experimental Benchmark and Comparative Data", caption_style))
                     story.append(Spacer(1, 6))
 
-        # Embed Relevant Screenshot if on Chapter 7 (Results) or Chapter 4 (Design)
+        # Embed Relevant Screenshots/Figures for this chapter based on chapter_target
         if report_data.screenshots:
-            for s_idx, sc in enumerate(report_data.screenshots):
-                if (ch.id == 7 and s_idx == 0) or (ch.id == 4 and s_idx == 1) or (ch.id == 7 and s_idx > 1):
-                    # Check if image file exists
-                    img_path = sc.filepath
-                    if img_path and os.path.exists(img_path):
-                        try:
-                            # Render image with 400px width keeping aspect ratio
-                            img = Image(img_path, width=min(printable_w, 420), height=230)
-                            story.append(Spacer(1, 6))
-                            story.append(img)
-                            story.append(Paragraph(f"Figure {ch.id}.{s_idx+1}: {safe_xml(sc.caption)}", caption_style))
-                        except Exception as img_err:
-                            print(f"Warning: Failed embedding image in PDF: {img_err}")
+            chap_screenshots = [sc for sc in report_data.screenshots if getattr(sc, "chapter_target", 7) == ch.id]
+            is_results_ch = any(k in ch.title.lower() for k in ["result", "benchmark", "experiment", "testing", "evaluation"])
+            if is_results_ch:
+                all_ids = [c.id for c in report_data.chapters]
+                orphans = [sc for sc in report_data.screenshots if getattr(sc, "chapter_target", 7) not in all_ids]
+                chap_screenshots.extend(orphans)
+
+            for s_idx, sc in enumerate(chap_screenshots, 1):
+                img_path = sc.filepath
+                if img_path and os.path.exists(img_path):
+                    try:
+                        # Render image respecting maximum printable width
+                        img = Image(img_path, width=min(printable_w, 420), height=230)
+                        story.append(Spacer(1, 6))
+                        story.append(img)
+                        story.append(Paragraph(f"Figure {ch.id}.{s_idx}: {safe_xml(sc.caption)}", caption_style))
+                        story.append(Spacer(1, 8))
+                    except Exception as img_err:
+                        print(f"Warning: Failed embedding image in PDF: {img_err}")
 
         story.append(PageBreak())
 
@@ -601,3 +664,6 @@ def create_university_pdf(report_data: ReportData, output_filepath: str) -> str:
     doc.build(story, canvasmaker=canvas_maker)
 
     return output_filepath
+
+
+build_academic_pdf = create_university_pdf

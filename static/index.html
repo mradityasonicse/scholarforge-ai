@@ -415,6 +415,39 @@
         </div>
       </div>
 
+      <!-- Academic Rigor & Page Depth Selector -->
+      <div class="mb-6 p-4 rounded-xl bg-slate-900/60 border border-white/10">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-2 flex items-center gap-1.5">
+          <i data-lucide="layers" class="w-4 h-4"></i> Academic Rigor & Report Volume
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div onclick="selectAcademicDepth('comprehensive')" id="depth-comprehensive" class="depth-card p-3 rounded-lg border border-cyan-500 bg-cyan-950/20 cursor-pointer hover:border-cyan-400 transition-all">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-cyan-300">Comprehensive Grade</span>
+              <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded">Recommended</span>
+            </div>
+            <p class="text-[11px] text-slate-300">25–35+ Pages • 8 Dense Chapters</p>
+            <p class="text-[10px] text-slate-400 mt-1">Mathematical models, pseudocode, AST code listings, 10-tier test matrices & 300-DPI charts.</p>
+          </div>
+
+          <div onclick="selectAcademicDepth('standard')" id="depth-standard" class="depth-card p-3 rounded-lg border border-white/10 bg-slate-900/40 cursor-pointer hover:border-cyan-400 transition-all">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-white">Standard Submission</span>
+            </div>
+            <p class="text-[11px] text-slate-300">15–20 Pages • Balanced</p>
+            <p class="text-[10px] text-slate-400 mt-1">Standard college report requirements with core system modules and diagrams.</p>
+          </div>
+
+          <div onclick="selectAcademicDepth('ieee_condensed')" id="depth-ieee_condensed" class="depth-card p-3 rounded-lg border border-white/10 bg-slate-900/40 cursor-pointer hover:border-cyan-400 transition-all">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-white">IEEE / Mini-Project</span>
+            </div>
+            <p class="text-[11px] text-slate-300">8–12 Pages • Condensed</p>
+            <p class="text-[10px] text-slate-400 mt-1">High-density conference or seminar paper format with key experimental proofs.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Custom Guidelines Input -->
       <div id="customGuidelinesBox" class="mb-6 p-4 rounded-xl bg-slate-900/60 border border-white/10">
         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">

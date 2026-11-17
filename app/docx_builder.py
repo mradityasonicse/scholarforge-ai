@@ -354,16 +354,20 @@ def create_university_docx(report_data: ReportData, output_filepath: str) -> str
     r_lof.font.size = Pt(16)
 
     lof_entries = []
-    fig_idx = 1
-    for s in report_data.screenshots:
-        caption = s.caption if s.caption else f"Figure {fig_idx}: System Interface"
-        lof_entries.append((caption, "18"))
-        fig_idx += 1
+    fig_counters = {}
+    for sc in report_data.screenshots:
+        target_ch = getattr(sc, "chapter_target", 7)
+        fig_counters[target_ch] = fig_counters.get(target_ch, 0) + 1
+        caption = sc.caption if sc.caption else "System Interface"
+        fig_label = f"Figure {target_ch}.{fig_counters[target_ch]}: {caption}"
+        page_est = "14" if target_ch == 4 else ("20" if target_ch == 6 else "25")
+        lof_entries.append((fig_label, page_est))
 
     if not lof_entries:
-        lof_entries.append(("Figure 4.1: High-Level Architecture Diagram", "12"))
-        lof_entries.append(("Figure 4.2: Data Flow Diagram (DFD Level 1)", "14"))
-        lof_entries.append(("Figure 6.1: Application User Dashboard", "18"))
+        lof_entries.append(("Figure 4.1: High-Level Layered System Architecture Topology", "12"))
+        lof_entries.append(("Figure 4.2: Data Flow Diagram (DFD Level 1 Detailed Operational Flow)", "14"))
+        lof_entries.append(("Figure 7.1: Comparative End-to-End Latency Benchmark Under 1,000 Concurrent Requests", "24"))
+        lof_entries.append(("Figure 7.2: Quantitative Classification Accuracy and F1-Score Telemetry", "26"))
 
     lof_table = doc.add_table(rows=len(lof_entries), cols=2)
     lof_table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -460,33 +464,38 @@ def create_university_docx(report_data: ReportData, output_filepath: str) -> str
                             cell.text = str(val)
                             set_cell_margins(cell, 50, 50, 80, 80)
 
-        # Embed Screenshot into Results Chapter (typically Chapter 6 or if chapter title mentions results/screenshots)
-        is_results_chap = any(k in chapter.title.lower() for k in ["result", "screenshot", "output", "experiment", "implementation"])
-        if is_results_chap and screenshot_pool:
-            while screenshot_pool:
-                sc = screenshot_pool.pop(0)
-                used_screenshot_idx += 1
-                if os.path.exists(sc.filepath):
-                    try:
-                        p_img = doc.add_paragraph()
-                        p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                        p_img.paragraph_format.space_before = Pt(14)
-                        p_img.paragraph_format.space_after = Pt(4)
-                        # Add image with maximum width 5.5 inches to respect margins
-                        run_img = p_img.add_run()
-                        run_img.add_picture(sc.filepath, width=Inches(5.5))
-                        
-                        # Add Caption
-                        p_cap = doc.add_paragraph()
-                        p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                        p_cap.paragraph_format.space_after = Pt(14)
-                        r_cap = p_cap.add_run(f"Figure {chapter.id}.{used_screenshot_idx}: {sc.caption}")
-                        r_cap.italic = True
-                        r_cap.bold = True
-                        r_cap.font.size = Pt(10.5)
-                        r_cap.font.color.rgb = RGBColor(71, 85, 105)
-                    except Exception as img_err:
-                        print(f"Warning embedding screenshot {sc.filename}: {img_err}")
+        # Embed Screenshots/Figures explicitly targeted to this chapter
+        chap_screenshots = [sc for sc in report_data.screenshots if getattr(sc, "chapter_target", 7) == chapter.id]
+
+        # If this is a results/testing chapter, also include any screenshots whose chapter target doesn't exist
+        is_results_chap = any(k in chapter.title.lower() for k in ["result", "experiment", "benchmark", "testing", "evaluation"])
+        if is_results_chap:
+            valid_chap_ids = [c.id for c in report_data.chapters]
+            orphans = [sc for sc in report_data.screenshots if getattr(sc, "chapter_target", 7) not in valid_chap_ids]
+            chap_screenshots.extend(orphans)
+
+        for fig_idx, sc in enumerate(chap_screenshots, 1):
+            if sc.filepath and os.path.exists(sc.filepath):
+                try:
+                    p_img = doc.add_paragraph()
+                    p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    p_img.paragraph_format.space_before = Pt(14)
+                    p_img.paragraph_format.space_after = Pt(4)
+                    # Add image with maximum width 5.5 inches to respect margins
+                    run_img = p_img.add_run()
+                    run_img.add_picture(sc.filepath, width=Inches(5.5))
+                    
+                    # Add Caption
+                    p_cap = doc.add_paragraph()
+                    p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    p_cap.paragraph_format.space_after = Pt(14)
+                    r_cap = p_cap.add_run(f"Figure {chapter.id}.{fig_idx}: {sc.caption}")
+                    r_cap.italic = True
+                    r_cap.bold = True
+                    r_cap.font.size = Pt(10.5)
+                    r_cap.font.color.rgb = RGBColor(71, 85, 105)
+                except Exception as img_err:
+                    print(f"Warning embedding screenshot {sc.filename}: {img_err}")
 
         # Page break after every chapter except the last one
         if ch_idx < len(report_data.chapters) - 1:
@@ -536,3 +545,6 @@ def create_university_docx(report_data: ReportData, output_filepath: str) -> str
     os.makedirs(os.path.dirname(os.path.abspath(output_filepath)), exist_ok=True)
     doc.save(output_filepath)
     return output_filepath
+
+
+build_academic_docx = create_university_docx

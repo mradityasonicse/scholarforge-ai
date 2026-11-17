@@ -11,3 +11,5 @@ uploads/*
 Thumbs.db
 
 .vercel
+data/*.db
+data/*.db-journal

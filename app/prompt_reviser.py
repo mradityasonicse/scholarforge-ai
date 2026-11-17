@@ -5,6 +5,19 @@ from app.models import PromptRevisionRequest, RevisionResponse, ReportData, Chap
 from app.report_generator import call_llm_api
 
 
+def format_academic_title(title_str: str) -> str:
+    words = title_str.strip().split()
+    formatted = []
+    acronyms = {"AI", "ML", "IOT", "API", "DFD", "ERD", "UML", "NLP", "CNN", "RNN", "LSTM", "LLM", "AWS", "UI", "UX", "REST", "SQL", "DBMS", "OS"}
+    for w in words:
+        clean_upper = re.sub(r'[^A-Za-z]', '', w).upper()
+        if clean_upper in acronyms:
+            formatted.append(clean_upper)
+        else:
+            formatted.append(w.capitalize())
+    return " ".join(formatted)
+
+
 def apply_offline_prompt_heuristic(report: ReportData, user_prompt: str, target_section: str = "all") -> tuple[ReportData, str]:
     """
     Applies comprehensive heuristic revisions when offline or when no API key is present.
@@ -21,7 +34,7 @@ def apply_offline_prompt_heuristic(report: ReportData, user_prompt: str, target_
     quoted_title = re.search(r'(?:title|project\s*name)\s*(?:change\s*karke|badal\s*ke|badlo|to|is|change\s*to|rakh\s*do)?\s*[:=]?\s*[\'"]([^\'"]{3,})[\'"]', user_prompt, re.IGNORECASE)
     if quoted_title:
         cand_title = quoted_title.group(1).strip()
-        updated.metadata.title = cand_title.title()
+        updated.metadata.title = format_academic_title(cand_title)
         summary_messages.append(f"Updated Project Title to: '{updated.metadata.title}'")
     else:
         # Unquoted title
@@ -29,7 +42,7 @@ def apply_offline_prompt_heuristic(report: ReportData, user_prompt: str, target_
         if unquoted:
             cand_title = unquoted.group(1).strip()
             if len(cand_title) >= 4 and not any(w in cand_title.lower() for w in ["change", "karke", "badal", "kar do"]):
-                updated.metadata.title = cand_title.title()
+                updated.metadata.title = format_academic_title(cand_title)
                 summary_messages.append(f"Updated Project Title to: '{updated.metadata.title}'")
 
     # 2. College Name Change
@@ -67,13 +80,41 @@ def apply_offline_prompt_heuristic(report: ReportData, user_prompt: str, target_
             summary_messages.append(f"Updated primary student name to: {sname}")
 
     # 6. Guide Name Change
-    guide_match = re.search(r'(?:guide\s*name|guide)\s*(?:to|is|karo|change\s*to|badal\s*ke)?\s*[:=]?\s*([A-Za-z\s\.]+)', user_prompt, re.IGNORECASE)
+    guide_match = re.search(r'(?:guide\s*(?:ka\s*naam|name)?)\s*(?:to|is|karo|change\s*to|badal\s*ke|rakh\s*do)?\s*[:=]?\s*([A-Za-z\s\.]+?)(?:\s+(?:kar\s*do|karo|aur|and|bhai|\n|$))', user_prompt, re.IGNORECASE)
     if guide_match and "add" not in p_lower and any(w in p_lower for w in ["guide"]):
         gname = guide_match.group(1).strip().title()
+        gname = re.sub(r'^(?:ka\s*naam|name|ko)\s+', '', gname, flags=re.IGNORECASE).strip()
         gname = re.sub(r'\s+(?:Kar\s*Do|Karo|Bhai)$', '', gname, flags=re.IGNORECASE).strip()
         if len(gname) > 3 and not any(w in gname.lower() for w in ["karo", "change", "kar", "me", "in"]):
             updated.metadata.guide_name = gname
             summary_messages.append(f"Updated Project Guide name to: {gname}")
+
+    # 6b. HOD Name Change
+    hod_match = re.search(r'(?:hod\s*(?:ka\s*naam|name)?|head\s*of\s*department)\s*(?:to|is|karo|change\s*to|badal\s*ke|rakh\s*do)?\s*[:=]?\s*([A-Za-z\s\.]+?)(?:\s+(?:kar\s*do|karo|aur|and|bhai|\n|$))', user_prompt, re.IGNORECASE)
+    if hod_match and any(w in p_lower for w in ["hod", "head of department"]):
+        hname = hod_match.group(1).strip().title()
+        hname = re.sub(r'^(?:ka\s*naam|name|ko)\s+', '', hname, flags=re.IGNORECASE).strip()
+        hname = re.sub(r'\s+(?:Kar\s*Do|Karo|Bhai)$', '', hname, flags=re.IGNORECASE).strip()
+        if len(hname) > 3 and not any(w in hname.lower() for w in ["karo", "change", "kar"]):
+            updated.metadata.hod_name = hname
+            summary_messages.append(f"Updated Head of Department (HOD) to: {hname}")
+
+    # 6c. Principal Name Change
+    princ_match = re.search(r'(?:principal\s*(?:ka\s*naam|name)?)\s*(?:to|is|karo|change\s*to|badal\s*ke|rakh\s*do)?\s*[:=]?\s*([A-Za-z\s\.]+?)(?:\s+(?:kar\s*do|karo|aur|and|bhai|\n|$))', user_prompt, re.IGNORECASE)
+    if princ_match and any(w in p_lower for w in ["principal"]):
+        prname = princ_match.group(1).strip().title()
+        prname = re.sub(r'^(?:ka\s*naam|name|ko)\s+', '', prname, flags=re.IGNORECASE).strip()
+        prname = re.sub(r'\s+(?:Kar\s*Do|Karo|Bhai)$', '', prname, flags=re.IGNORECASE).strip()
+        if len(prname) > 3 and not any(w in prname.lower() for w in ["karo", "change", "kar"]):
+            updated.metadata.principal_name = prname
+            summary_messages.append(f"Updated Principal name to: {prname}")
+
+    # 6d. Academic Year Change
+    yr_match = re.search(r'(?:academic\s*year|session)\s*(?:to|is|karo|change\s*to)?\s*[:=]?\s*(\d{4}\s*[-–]\s*\d{2,4})', user_prompt, re.IGNORECASE)
+    if yr_match:
+        new_yr = yr_match.group(1).strip()
+        updated.metadata.academic_year = new_yr
+        summary_messages.append(f"Updated Academic Year to: {new_yr}")
 
     # 7. Abstract Adjustments (Rewrite, Shorten, Expand)
     if "abstract" in p_lower:
@@ -268,3 +309,6 @@ RESPONSE FORMAT (JSON ONLY):
         updated_report=updated_report,
         revision_summary=summary
     )
+
+
+apply_prompt_revision = revise_report_with_prompt

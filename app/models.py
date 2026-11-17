@@ -59,6 +59,7 @@ class CodeSource(BaseModel):
 
 class FormatConfig(BaseModel):
     preset: str = "btech_standard"  # btech_standard, vtu, aktu, mca_bca, ieee_condensed, custom
+    academic_depth: str = "comprehensive"  # "standard" (15-20 pgs), "comprehensive" (25-35+ pgs), "ieee_condensed" (8-12 pgs)
     custom_guidelines: Optional[str] = None
     font_family: str = "Times New Roman"
     line_spacing: float = 1.5
