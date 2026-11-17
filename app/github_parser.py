@@ -4,13 +4,15 @@ import requests
 from typing import Dict, Any, List, Optional
 from urllib.parse import urlparse
 
+from app.code_analyzer import analyze_source_file
+
 
 def parse_github_url(url: str) -> Optional[tuple[str, str]]:
     """Extract (owner, repo) from GitHub URL."""
     url = url.strip().rstrip("/")
     if not ("github.com" in url or "github" in url):
         return None
-    
+
     parsed = urlparse(url)
     parts = [p for p in parsed.path.split("/") if p]
     if len(parts) >= 2:
@@ -20,10 +22,50 @@ def parse_github_url(url: str) -> Optional[tuple[str, str]]:
     return None
 
 
+def is_candidate_source_file(path: str) -> bool:
+    """Checks if a path is a meaningful source code file."""
+    lower = path.lower()
+    
+    # Exclude binaries, vendor, node_modules, tests, and minified bundles
+    ignored_keywords = [
+        "node_modules", "vendor", ".git", ".github", "venv", ".venv",
+        "dist", "build", ".min.", "package-lock", "yarn.lock", "poetry.lock",
+        "__pycache__", "test_", "_test", "tests/", "spec.", "favicon", "license"
+    ]
+    if any(k in lower for k in ignored_keywords):
+        return False
+
+    valid_exts = [".py", ".js", ".ts", ".tsx", ".jsx", ".java", ".cpp", ".c", ".go", ".rs", ".sql"]
+    return any(lower.endswith(ext) for ext in valid_exts)
+
+
+def prioritize_source_files(file_tree: List[str]) -> List[str]:
+    """Sorts and prioritizes the most important architectural source files."""
+    candidates = [f for f in file_tree if is_candidate_source_file(f)]
+    
+    def score_file(path: str) -> int:
+        p = path.lower()
+        score = 0
+        if any(p.endswith(m) for m in ["main.py", "app.py", "server.js", "server.py", "index.ts", "index.js", "app.tsx"]):
+            score += 100
+        if any(k in p for k in ["model", "schema", "entity"]):
+            score += 80
+        if any(k in p for k in ["route", "controller", "api", "endpoint", "view"]):
+            score += 70
+        if any(k in p for k in ["service", "core", "engine", "algo", "processor", "pipeline"]):
+            score += 65
+        if any(k in p for k in ["util", "helper", "database", "db"]):
+            score += 50
+        return score
+
+    candidates.sort(key=score_file, reverse=True)
+    return candidates[:12]  # Fetch top 12 primary files
+
+
 def fetch_github_repo_data(github_url: str) -> Dict[str, Any]:
     """
-    Fetches README, file tree, dependencies, and metadata from GitHub.
-    Uses public GitHub APIs and fallback raw URLs (no authentication token required).
+    Fetches README, full file tree, dependency specifications, and deeply inspects
+    multiple core source code files to extract real functions, classes, and endpoints.
     """
     parsed = parse_github_url(github_url)
     if not parsed:
@@ -31,12 +73,13 @@ def fetch_github_repo_data(github_url: str) -> Dict[str, Any]:
             "error": "Invalid GitHub repository URL",
             "detected_tech_stack": [],
             "readme_content": "",
-            "file_tree_summary": ""
+            "file_tree_summary": "",
+            "files": []
         }
-    
+
     owner, repo = parsed
-    headers = {"Accept": "application/vnd.github.v3+json", "User-Agent": "ProjectReportAI/1.0"}
-    
+    headers = {"Accept": "application/vnd.github.v3+json", "User-Agent": "ScholarForgeAI/2.0"}
+
     repo_info = {}
     default_branch = "main"
     readme_content = ""
@@ -44,7 +87,7 @@ def fetch_github_repo_data(github_url: str) -> Dict[str, Any]:
     dependencies_content = ""
     tech_stack = set()
 
-    # 1. Fetch Repo Info
+    # 1. Fetch Repo Metadata
     try:
         api_url = f"https://api.github.com/repos/{owner}/{repo}"
         res = requests.get(api_url, headers=headers, timeout=8)
@@ -66,7 +109,7 @@ def fetch_github_repo_data(github_url: str) -> Dict[str, Any]:
                 raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{candidate}"
                 raw_res = requests.get(raw_url, headers=headers, timeout=6)
                 if raw_res.status_code == 200 and raw_res.text.strip():
-                    readme_content = raw_res.text[:8000]  # First 8000 chars
+                    readme_content = raw_res.text[:8000]
                     break
             except Exception:
                 pass
@@ -80,11 +123,11 @@ def fetch_github_repo_data(github_url: str) -> Dict[str, Any]:
         if tree_res.status_code == 200:
             tree_data = tree_res.json()
             paths = [item["path"] for item in tree_data.get("tree", []) if item.get("type") == "blob"]
-            file_tree = paths[:120]  # Sample first 120 files
+            file_tree = paths[:150]
     except Exception as e:
         print(f"Warning: GitHub API tree failed: {e}")
 
-    # Detect Tech Stack from file extensions & config files
+    # Detect Tech Stack from extensions
     for path in file_tree:
         lower = path.lower()
         if lower.endswith(".py"):
@@ -106,7 +149,7 @@ def fetch_github_repo_data(github_url: str) -> Dict[str, Any]:
         elif "requirements.txt" in lower or "pyproject.toml" in lower:
             tech_stack.add("Python")
 
-    # 4. Fetch dependencies (requirements.txt / package.json)
+    # 4. Fetch Dependencies
     dep_files = ["requirements.txt", "package.json", "pyproject.toml"]
     for dep in dep_files:
         try:
@@ -114,30 +157,42 @@ def fetch_github_repo_data(github_url: str) -> Dict[str, Any]:
             dep_res = requests.get(dep_url, headers=headers, timeout=5)
             if dep_res.status_code == 200:
                 dependencies_content = dep_res.text[:3000]
-                # Parse packages from requirements
                 for line in dep_res.text.split("\n"):
                     clean = re.split(r'[=><~]', line.strip())[0].strip().lower()
-                    if clean in ["fastapi", "flask", "django", "pytorch", "torch", "tensorflow", 
-                                 "scikit-learn", "sklearn", "opencv-python", "cv2", "pandas", 
+                    if clean in ["fastapi", "flask", "django", "pytorch", "torch", "tensorflow",
+                                 "scikit-learn", "sklearn", "opencv-python", "cv2", "pandas",
                                  "numpy", "streamlit", "react", "next", "express", "mongo", "postgres", "mysql"]:
                         tech_stack.add(clean.title())
                 break
         except Exception:
             pass
 
-    # 5. Fetch sample core source code file (e.g. main.py or app.py)
-    sample_code = ""
-    candidate_main_files = [f for f in file_tree if any(f.endswith(m) for m in ["main.py", "app.py", "server.py", "index.py", "index.js", "App.tsx"])]
-    if candidate_main_files:
-        target_file = candidate_main_files[0]
-        try:
-            main_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{target_file}"
-            m_res = requests.get(main_url, headers=headers, timeout=6)
-            if m_res.status_code == 200:
-                sample_code = f"// File: {target_file}\n" + m_res.text[:4000]
-        except Exception:
-            pass
+    # 5. DEEP CODE ACCESS: Fetch and Analyze Top Source Files
+    parsed_files: List[Dict[str, Any]] = []
+    top_candidates = prioritize_source_files(file_tree)
+    combined_sample_code_parts = []
+    all_classes = []
+    all_functions = []
+    all_endpoints = []
 
+    for target_file in top_candidates:
+        try:
+            raw_file_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{target_file}"
+            f_res = requests.get(raw_file_url, headers=headers, timeout=6)
+            if f_res.status_code == 200 and f_res.text.strip():
+                code_text = f_res.text
+                file_analysis = analyze_source_file(target_file, code_text)
+                parsed_files.append(file_analysis)
+                all_classes.extend(file_analysis["classes"])
+                all_functions.extend(file_analysis["functions"])
+                all_endpoints.extend(file_analysis["endpoints"])
+                
+                # Keep compact sample for prompt
+                combined_sample_code_parts.append(f"// File: {target_file}\n" + code_text[:1200])
+        except Exception as err:
+            print(f"Warning fetching code file {target_file}: {err}")
+
+    sample_code_combined = "\n\n".join(combined_sample_code_parts[:4])
     file_tree_str = "\n".join(file_tree[:50]) + (f"\n... and {len(file_tree)-50} more files" if len(file_tree) > 50 else "")
 
     return {
@@ -147,59 +202,73 @@ def fetch_github_repo_data(github_url: str) -> Dict[str, Any]:
         "readme_content": readme_content,
         "file_tree_summary": file_tree_str,
         "dependencies_summary": dependencies_content[:1000],
-        "sample_code": sample_code
+        "sample_code": sample_code_combined,
+        "files": parsed_files,
+        "extracted_symbols": {
+            "classes": sorted(list(set(all_classes)))[:20],
+            "functions": sorted(list(set(all_functions)))[:30],
+            "endpoints": sorted(list(set(all_endpoints)))[:20]
+        }
     }
 
 
 def scan_local_directory(directory_path: str) -> Dict[str, Any]:
     """
-    Scans a local project directory for students who want to build report from local files.
+    Scans a local project directory and deeply analyzes source code files.
     """
     if not os.path.exists(directory_path) or not os.path.isdir(directory_path):
-        return {"error": "Directory path does not exist", "detected_tech_stack": []}
-    
+        return {"error": "Directory path does not exist", "detected_tech_stack": [], "files": []}
+
     file_list = []
     tech_stack = set()
     readme_content = ""
-    sample_code = ""
-    
+    parsed_files = []
+    all_classes = []
+    all_functions = []
+    all_endpoints = []
+    combined_sample_code_parts = []
+
     ignored_dirs = {".git", "node_modules", "__pycache__", "venv", ".venv", "env", "dist", "build"}
-    
+
     for root, dirs, files in os.walk(directory_path):
         dirs[:] = [d for d in dirs if d not in ignored_dirs]
         for f in files:
-            rel_path = os.path.relpath(os.path.join(root, f), directory_path)
+            rel_path = os.path.relpath(os.path.join(root, f), directory_path).replace("\\", "/")
             file_list.append(rel_path)
             lower = f.lower()
+            
             if "readme" in lower and not readme_content:
                 try:
                     with open(os.path.join(root, f), "r", encoding="utf-8", errors="ignore") as rf:
                         readme_content = rf.read()[:8000]
                 except Exception:
                     pass
-            
-            # Detect tech
-            if f.endswith(".py"):
-                tech_stack.add("Python")
-            elif f.endswith(".js"):
-                tech_stack.add("JavaScript")
-            elif f.endswith(".ts") or f.endswith(".tsx"):
-                tech_stack.add("TypeScript")
-            elif f.endswith(".java"):
-                tech_stack.add("Java")
-            
-            if f in ["main.py", "app.py", "server.js", "index.js"] and not sample_code:
+
+            if is_candidate_source_file(rel_path) and len(parsed_files) < 12:
                 try:
                     with open(os.path.join(root, f), "r", encoding="utf-8", errors="ignore") as sf:
-                        sample_code = sf.read()[:4000]
+                        code_text = sf.read()
+                        if code_text.strip():
+                            file_analysis = analyze_source_file(rel_path, code_text)
+                            parsed_files.append(file_analysis)
+                            all_classes.extend(file_analysis["classes"])
+                            all_functions.extend(file_analysis["functions"])
+                            all_endpoints.extend(file_analysis["endpoints"])
+                            combined_sample_code_parts.append(f"// File: {rel_path}\n" + code_text[:1200])
                 except Exception:
                     pass
 
     return {
         "repo_name": os.path.basename(os.path.abspath(directory_path)),
         "description": "Local Project Workspace",
-        "detected_tech_stack": sorted(list(tech_stack)),
+        "detected_tech_stack": sorted(list(tech_stack)) or ["Python"],
         "readme_content": readme_content,
         "file_tree_summary": "\n".join(file_list[:50]),
-        "sample_code": sample_code
+        "sample_code": "\n\n".join(combined_sample_code_parts[:4]),
+        "files": parsed_files,
+        "extracted_symbols": {
+            "classes": sorted(list(set(all_classes)))[:20],
+            "functions": sorted(list(set(all_functions)))[:30],
+            "endpoints": sorted(list(set(all_endpoints)))[:20]
+        }
     }

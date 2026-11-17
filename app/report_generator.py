@@ -1,3 +1,4 @@
+import os
 import json
 import re
 import requests
@@ -232,34 +233,54 @@ def generate_offline_academic_report(request: GenerateReportRequest, chapter_tem
                 )
 
             elif any(k in sub_clean for k in ["implementation", "module", "algorithm"]):
-                content = (
-                    f"Implementation of \"{title}\" is organized into decoupled service modules adhering to SOLID software design principles. "
-                    f"Data ingestion routines normalize heterogeneous payloads prior to execution of analytical passes.\n\n"
-                    f"The core optimization algorithm models convergence through empirical risk minimization: "
-                    f"arg min_theta sum [ L(f(x_i; theta), y_i) ] + lambda * ||theta||^2, where parameters theta update iteratively via adaptive gradient moments."
-                )
-                code_snip = (
-                    f"# Production Module: Core Execution Pipeline for {title}\n"
-                    f"import time\n"
-                    f"from typing import Dict, Any\n\n"
-                    f"def process_pipeline_payload(payload: Dict[str, Any]) -> Dict[str, Any]:\n"
-                    f"    \"\"\"Executes validated pipeline workflow with bounded latency.\"\"\"\n"
-                    f"    t_start = time.perf_counter()\n"
-                    f"    if not payload:\n"
-                    f"        raise ValueError('Invalid payload: input cannot be null')\n"
-                    f"    \n"
-                    f"    # Step 1: Feature sanitization and transformation\n"
-                    f"    sanitized_data = {{k: str(v).strip() for k, v in payload.items()}}\n"
-                    f"    \n"
-                    f"    # Step 2: Algorithmic inference & metric calculation\n"
-                    f"    execution_ms = (time.perf_counter() - t_start) * 1000.0\n"
-                    f"    return {{\n"
-                    f"        'status': 'success',\n"
-                    f"        'project': '{title}',\n"
-                    f"        'latency_ms': round(execution_ms, 2),\n"
-                    f"        'data': sanitized_data\n"
-                    f"    }}\n"
-                )
+                selected_files = [f for f in code.files if getattr(f, "selected", True) and getattr(f, "content", "")]
+                if selected_files:
+                    primary_f = selected_files[0]
+                    mod_names = ", ".join([os.path.basename(f.path) for f in selected_files[:4]])
+                    classes_found = [c for f in selected_files for c in (f.classes or [])][:6]
+                    funcs_found = [fn for f in selected_files for fn in (f.functions or [])][:6]
+                    endpoints_found = [ep for f in selected_files for ep in (f.endpoints or [])][:5]
+
+                    classes_text = f" Primary classes encapsulated within this module include: {', '.join(classes_found)}." if classes_found else ""
+                    funcs_text = f" Essential computational subroutines include: {', '.join(funcs_found)}." if funcs_found else ""
+                    endpoints_text = f" Exposed API contracts and endpoints include: {', '.join(endpoints_found)}." if endpoints_found else ""
+
+                    content = (
+                        f"The software engineering implementation of \"{title}\" is organized into decoupled service modules "
+                        f"({mod_names}) adhering to modular abstraction and clean separation of concerns.{classes_text}{funcs_text}{endpoints_text}\n\n"
+                        f"The underlying execution routines enforce deterministic data sanitization and state persistence, "
+                        f"ensuring asymptotic efficiency bounded within O(N log N) time complexity during real-time transactions."
+                    )
+                    code_snip = f"# Module: {primary_f.path}\n" + "\n".join(primary_f.content.split("\n")[:40])
+                else:
+                    content = (
+                        f"Implementation of \"{title}\" is organized into decoupled service modules adhering to SOLID software design principles. "
+                        f"Data ingestion routines normalize heterogeneous payloads prior to execution of analytical passes.\n\n"
+                        f"The core optimization algorithm models convergence through empirical risk minimization: "
+                        f"arg min_theta sum [ L(f(x_i; theta), y_i) ] + lambda * ||theta||^2, where parameters theta update iteratively via adaptive gradient moments."
+                    )
+                    code_snip = (
+                        f"# Production Module: Core Execution Pipeline for {title}\n"
+                        f"import time\n"
+                        f"from typing import Dict, Any\n\n"
+                        f"def process_pipeline_payload(payload: Dict[str, Any]) -> Dict[str, Any]:\n"
+                        f"    \"\"\"Executes validated pipeline workflow with bounded latency.\"\"\"\n"
+                        f"    t_start = time.perf_counter()\n"
+                        f"    if not payload:\n"
+                        f"        raise ValueError('Invalid payload: input cannot be null')\n"
+                        f"    \n"
+                        f"    # Step 1: Feature sanitization and transformation\n"
+                        f"    sanitized_data = {{k: str(v).strip() for k, v in payload.items()}}\n"
+                        f"    \n"
+                        f"    # Step 2: Algorithmic inference & metric calculation\n"
+                        f"    execution_ms = (time.perf_counter() - t_start) * 1000.0\n"
+                        f"    return {{\n"
+                        f"        'status': 'success',\n"
+                        f"        'project': '{title}',\n"
+                        f"        'latency_ms': round(execution_ms, 2),\n"
+                        f"        'data': sanitized_data\n"
+                        f"    }}\n"
+                    )
 
             elif any(k in sub_clean for k in ["result", "screenshot", "output", "experiment"]):
                 content = (

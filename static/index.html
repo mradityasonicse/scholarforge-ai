@@ -265,6 +265,49 @@
         <pre id="repoSummaryText" class="text-[11px] text-slate-300 font-mono max-h-32 overflow-y-auto whitespace-pre-wrap"></pre>
       </div>
 
+      <!-- DEEP REPOSITORY CODE EXPLORER & SYMBOL INSPECTOR -->
+      <div id="repoCodeExplorerCard" class="mb-6 p-5 rounded-2xl bg-slate-900/80 border border-indigo-500/30 hidden">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="code-2" class="w-4 h-4 text-cyan-400"></i>
+              Repository Code Inspector & Module Selector
+            </h3>
+            <p class="text-xs text-slate-400">Select which source code files and algorithms should be featured in Chapter 5 of your project report.</p>
+          </div>
+
+          <!-- Symbol Badges -->
+          <div class="flex flex-wrap items-center gap-2 text-[11px]">
+            <span class="badge-tag bg-cyan-950/40 text-cyan-300 border-cyan-500/30">
+              <i data-lucide="box" class="w-3 h-3"></i> <span id="symbolClassesCount">0</span> Classes
+            </span>
+            <span class="badge-tag bg-indigo-950/40 text-indigo-300 border-indigo-500/30">
+              <i data-lucide="braces" class="w-3 h-3"></i> <span id="symbolFunctionsCount">0</span> Functions
+            </span>
+            <span class="badge-tag bg-emerald-950/40 text-emerald-300 border-emerald-500/30">
+              <i data-lucide="route" class="w-3 h-3"></i> <span id="symbolEndpointsCount">0</span> Endpoints
+            </span>
+          </div>
+        </div>
+
+        <!-- Two Column Explorer: File List + Live Code Preview -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- File List -->
+          <div class="lg:col-span-1 border border-white/10 rounded-xl bg-slate-950/50 p-2 max-h-72 overflow-y-auto space-y-1.5" id="repoFilesList">
+            <!-- Dynamic File Items -->
+          </div>
+
+          <!-- Code Preview Box -->
+          <div class="lg:col-span-2 border border-white/10 rounded-xl bg-slate-950/80 p-3 flex flex-col max-h-72">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/10 text-xs">
+              <span id="activeCodeFileName" class="font-mono text-cyan-300 font-semibold truncate">Select a file to inspect</span>
+              <span id="activeCodeMeta" class="text-[10px] text-slate-400 font-mono"></span>
+            </div>
+            <pre id="activeCodeSnippet" class="flex-1 text-[11px] text-slate-300 font-mono overflow-auto p-2 bg-slate-900/60 rounded whitespace-pre">Click on any file on the left to view its source code and extracted functions.</pre>
+          </div>
+        </div>
+      </div>
+
       <div class="flex justify-between mt-8">
         <button onclick="switchStep(1)" class="btn-secondary">
           <i data-lucide="arrow-left" class="w-4 h-4"></i> Back

@@ -31,6 +31,20 @@ class ScreenshotItem(BaseModel):
     chapter_target: int = 6
 
 
+class RepoFileItem(BaseModel):
+    path: str
+    name: Optional[str] = None
+    language: str = "python"
+    line_count: int = 0
+    size_bytes: int = 0
+    content: str = ""
+    preview: Optional[str] = None
+    classes: List[str] = []
+    functions: List[str] = []
+    endpoints: List[str] = []
+    selected: bool = True
+
+
 class CodeSource(BaseModel):
     github_url: Optional[str] = None
     local_path: Optional[str] = None
@@ -38,6 +52,9 @@ class CodeSource(BaseModel):
     detected_tech_stack: List[str] = []
     file_tree_summary: Optional[str] = None
     readme_content: Optional[str] = None
+    sample_code: Optional[str] = None
+    files: List[RepoFileItem] = []
+    extracted_symbols: Optional[Dict[str, Any]] = None
 
 
 class FormatConfig(BaseModel):

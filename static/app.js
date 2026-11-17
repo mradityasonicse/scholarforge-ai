@@ -248,6 +248,8 @@ async function analyzeGithubRepo() {
       appState.code_source.file_tree_summary = data.file_tree_summary || "";
       appState.code_source.sample_code = data.sample_code || "";
       appState.code_source.github_url = url;
+      appState.code_source.files = data.files || [];
+      appState.code_source.extracted_symbols = data.extracted_symbols || {};
 
       if (data.repo_name && (!document.getElementById("metaTitle").value || document.getElementById("metaTitle").value.includes("Disease Prediction"))) {
         document.getElementById("metaTitle").value = data.repo_name.replace(/-/g, " ").replace(/_/g, " ").toUpperCase();
@@ -258,6 +260,7 @@ async function analyzeGithubRepo() {
       sumBox.classList.remove("hidden");
       sumText.textContent = `Repository: ${data.repo_name}\nDescription: ${data.description || 'N/A'}\nTechnologies: ${data.detected_tech_stack.join(', ')}\n\nFiles detected:\n${data.file_tree_summary || 'N/A'}`;
       
+      renderRepoCodeExplorer();
       triggerAutoSave();
     } else {
       alert("Analysis error: " + (data.detail || "Could not fetch repository."));
@@ -293,17 +296,96 @@ async function analyzeLocalPath() {
       appState.code_source.local_path = path;
       appState.code_source.readme_content = data.readme_content || "";
       appState.code_source.sample_code = data.sample_code || "";
+      appState.code_source.files = data.files || [];
+      appState.code_source.extracted_symbols = data.extracted_symbols || {};
 
       const sumBox = document.getElementById("repoSummaryBox");
       const sumText = document.getElementById("repoSummaryText");
       sumBox.classList.remove("hidden");
       sumText.textContent = `Local Folder: ${data.repo_name}\nTechnologies: ${data.detected_tech_stack.join(', ')}\n\nFiles:\n${data.file_tree_summary}`;
+      renderRepoCodeExplorer();
       triggerAutoSave();
     } else {
       alert("Error scanning local folder: " + (data.detail || "Path not found"));
     }
   } catch (e) {
     alert("Connection error: " + e.message);
+  }
+}
+
+function renderRepoCodeExplorer() {
+  const explorerCard = document.getElementById("repoCodeExplorerCard");
+  const filesList = document.getElementById("repoFilesList");
+  if (!explorerCard || !filesList) return;
+
+  const files = appState.code_source.files || [];
+  const symbols = appState.code_source.extracted_symbols || { classes: [], functions: [], endpoints: [] };
+
+  if (!files.length) {
+    explorerCard.classList.add("hidden");
+    return;
+  }
+
+  explorerCard.classList.remove("hidden");
+  const clsCount = document.getElementById("symbolClassesCount");
+  const fnCount = document.getElementById("symbolFunctionsCount");
+  const epCount = document.getElementById("symbolEndpointsCount");
+  if (clsCount) clsCount.textContent = symbols.classes ? symbols.classes.length : 0;
+  if (fnCount) fnCount.textContent = symbols.functions ? symbols.functions.length : 0;
+  if (epCount) epCount.textContent = symbols.endpoints ? symbols.endpoints.length : 0;
+
+  filesList.innerHTML = "";
+  files.forEach((f, idx) => {
+    const item = document.createElement("div");
+    item.className = `p-2 rounded-lg cursor-pointer flex items-center justify-between text-xs transition-all ${idx === 0 ? 'bg-indigo-950/60 border border-indigo-500/40 text-white' : 'hover:bg-white/5 text-slate-300'}`;
+    item.id = `fileItem-${idx}`;
+    item.onclick = () => showFilePreview(f.path, idx);
+
+    item.innerHTML = `
+      <div class="flex items-center gap-2 truncate">
+        <input type="checkbox" ${f.selected !== false ? 'checked' : ''} onclick="event.stopPropagation(); toggleFileSelection('${f.path}')" class="rounded accent-indigo-500">
+        <span class="truncate font-mono">${f.name || f.path}</span>
+      </div>
+      <span class="text-[10px] text-slate-400 font-mono">${f.line_count || 0}L</span>
+    `;
+    filesList.appendChild(item);
+  });
+
+  if (files.length > 0) {
+    showFilePreview(files[0].path, 0);
+  }
+}
+
+function showFilePreview(filePath, activeIdx = -1) {
+  const files = appState.code_source.files || [];
+  const file = files.find(f => f.path === filePath);
+  if (!file) return;
+
+  const activeName = document.getElementById("activeCodeFileName");
+  const activeMeta = document.getElementById("activeCodeMeta");
+  const codeBox = document.getElementById("activeCodeSnippet");
+
+  if (activeName) activeName.textContent = file.path;
+  if (activeMeta) activeMeta.textContent = `${file.language.toUpperCase()} • ${file.line_count} lines • ${(file.size_bytes / 1024).toFixed(1)} KB`;
+  if (codeBox) codeBox.textContent = file.content || file.preview || "No content available.";
+
+  if (activeIdx >= 0) {
+    document.querySelectorAll("[id^='fileItem-']").forEach(el => {
+      el.className = "p-2 rounded-lg cursor-pointer flex items-center justify-between text-xs transition-all hover:bg-white/5 text-slate-300";
+    });
+    const selectedEl = document.getElementById(`fileItem-${activeIdx}`);
+    if (selectedEl) {
+      selectedEl.className = "p-2 rounded-lg cursor-pointer flex items-center justify-between text-xs transition-all bg-indigo-950/60 border border-indigo-500/40 text-white";
+    }
+  }
+}
+
+function toggleFileSelection(filePath) {
+  const files = appState.code_source.files || [];
+  const file = files.find(f => f.path === filePath);
+  if (file) {
+    file.selected = !file.selected;
+    triggerAutoSave();
   }
 }
 
@@ -914,6 +996,7 @@ async function loadProjectDraft(projectId) {
       if (data.code_source) {
         appState.code_source = data.code_source;
         renderTechBadges();
+        renderRepoCodeExplorer();
       }
       if (data.screenshots) {
         appState.screenshots = data.screenshots;
