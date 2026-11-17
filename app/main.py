@@ -33,13 +33,19 @@ from app.database import (
 )
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+if os.environ.get("VERCEL"):
+    UPLOAD_DIR = "/tmp/uploads"
+    TEMPLATES_DIR = "/tmp/templates"
+else:
+    UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+    TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+
 STATIC_DIR = os.path.join(BASE_DIR, "static")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(TEMPLATES_DIR, exist_ok=True)
+if not os.environ.get("VERCEL"):
+    os.makedirs(STATIC_DIR, exist_ok=True)
 
 # Initialize SQLite database
 init_db()

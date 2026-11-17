@@ -6,7 +6,10 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
+if os.environ.get("VERCEL"):
+    DATA_DIR = "/tmp/data"
+else:
+    DATA_DIR = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DATA_DIR, "scholarforge.db")
 
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -15,7 +18,11 @@ os.makedirs(DATA_DIR, exist_ok=True)
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")  # Fast concurrent reading and writing
+    if not os.environ.get("VERCEL"):
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+        except Exception:
+            pass
     return conn
 
 

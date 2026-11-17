@@ -10,3 +10,5 @@ uploads/sample_*
 uploads/custom_injected_*
 .DS_Store
 Thumbs.db
+
+.vercel
